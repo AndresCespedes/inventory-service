@@ -1,208 +1,267 @@
-# Servicio de Inventario - Microservicio
+# Servicio de Inventario
 
-Este proyecto implementa un microservicio de gestión de inventario que se comunica con un servicio de productos, siguiendo el estándar JSON API para respuestas.
+Este servicio es parte de una arquitectura de microservicios y se encarga de gestionar el inventario de productos. Se comunica con el servicio de productos a través de una API REST siguiendo el estándar JSON API.
 
 ## Características
 
-- 🚀 Microservicio NestJS para gestión de inventario
-- 🔄 Comunicación con servicio de productos mediante HTTP
-- 📊 Formato JSON API para respuestas
-- 🐳 Configuración con Docker y Docker Compose
-- 📝 Documentación API con Swagger
-- ✅ Pruebas automatizadas con Jest
-- 🧩 Validación de datos con class-validator
+- Gestión de inventario de productos
+- Integración con servicio de productos
+- Validación de datos
+- Documentación con Swagger
+- Manejo de errores estandarizado
+- Logging detallado
+- Tests unitarios y de integración
+- Dockerización completa
+- Monitoreo de eventos de inventario
 
 ## Requisitos
 
-- Node.js (>= 14.x)
-- npm o yarn
-- Docker y Docker Compose (para entorno containerizado)
-- Servicio de productos funcionando en paralelo
+- Node.js 18+
+- PostgreSQL 15+
+- Docker y Docker Compose (opcional)
 
 ## Instalación
 
-### Instalación local
+### Usando Docker (Recomendado)
 
+1. Clonar el repositorio:
 ```bash
-# Instalar dependencias
-npm install
-
-# Iniciar en modo desarrollo
-npm run start:dev
-
-# Compilar para producción
-npm run build
-
-# Iniciar en modo producción
-npm run start:prod
+git clone <repository-url>
+cd inventory-service
 ```
 
-### Instalación con Docker
-
+2. Crear archivo .env:
 ```bash
-# Construir imagen
-docker build -t inventory-service .
-
-# Ejecutar contenedor
-docker run -p 3001:3001 -e PRODUCTS_SERVICE_URL=http://product-service:3000 inventory-service
+cp .env.example .env
 ```
 
-### Usando Docker Compose
-
+3. Iniciar los servicios:
 ```bash
-# Iniciar ambos servicios (productos e inventario)
 docker-compose up -d
+```
 
-# Detener servicios
-docker-compose down
+El servicio estará disponible en `http://localhost:3001`
+
+### Instalación Local
+
+1. Instalar dependencias:
+```bash
+npm install
+```
+
+2. Configurar variables de entorno:
+```bash
+cp .env.example .env
+```
+
+3. Iniciar el servicio:
+```bash
+npm run start:dev
 ```
 
 ## Configuración
 
-El servicio utiliza las siguientes variables de entorno:
+### Variables de Entorno
 
-| Variable | Descripción | Valor por defecto |
-|----------|-------------|-------------------|
-| PRODUCTS_SERVICE_URL | URL base del servicio de productos | http://localhost:3000 |
-| API_KEY | Clave API para autenticación | my-secret-api-key |
-| PORT | Puerto en el que se ejecuta el servicio | 3001 |
+```env
+# Puerto del servicio
+PORT=3001
 
-## Documentación API
+# Configuración de la base de datos
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=inventory_db
 
-La documentación interactiva de la API está disponible en `/api/docs` una vez iniciado el servicio.
+# URL del servicio de productos
+PRODUCTS_SERVICE_URL=http://localhost:3000
 
-### Endpoints principales
+# API Key para autenticación
+API_KEY=your-api-key
 
-#### GET /inventory/:productId
+# Modo de prueba (opcional)
+TEST_MODE=false
+```
 
-Obtiene el inventario de un producto específico y su información relacionada.
+### Base de Datos
 
-**Respuesta exitosa (200 OK)**
+El servicio utiliza PostgreSQL con la siguiente estructura:
+
+```sql
+CREATE TABLE inventory (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## API Endpoints
+
+### Obtener Inventario por ID de Producto
+
+```http
+GET /inventory/{productId}
+Authorization: Bearer {api-key}
+```
+
+Respuesta exitosa:
 ```json
 {
   "data": {
-    "type": "inventory",
     "id": "1",
+    "type": "inventory",
     "attributes": {
-      "quantity": 100
+      "productId": 1,
+      "quantity": 100,
+      "createdAt": "2024-02-20T12:00:00Z",
+      "updatedAt": "2024-02-20T12:00:00Z"
     },
     "relationships": {
       "product": {
         "data": {
-          "type": "product",
-          "id": "1"
+          "id": "1",
+          "type": "product"
         }
       }
     }
   },
   "included": [
     {
-      "type": "product",
       "id": "1",
+      "type": "product",
       "attributes": {
-        "name": "Producto de ejemplo",
-        "price": 99.99
+        "name": "Producto de prueba",
+        "description": "Descripción del producto",
+        "price": 99.99,
+        "createdAt": "2024-02-20T12:00:00Z",
+        "updatedAt": "2024-02-20T12:00:00Z"
       }
     }
-  ],
-  "links": {
-    "self": "/inventory/1"
+  ]
+}
+```
+
+### Actualizar Inventario
+
+```http
+PATCH /inventory/{productId}
+Authorization: Bearer {api-key}
+Content-Type: application/json
+
+{
+  "data": {
+    "type": "inventory",
+    "attributes": {
+      "quantity": 150
+    }
   }
 }
 ```
 
-#### PATCH /inventory/:productId
-
-Actualiza la cantidad disponible de un producto.
-
-**Cuerpo de la solicitud**
-```json
-{
-  "quantity": 50
-}
-```
-
-**Respuesta exitosa (200 OK)**
+Respuesta exitosa:
 ```json
 {
   "data": {
-    "type": "inventory",
     "id": "1",
+    "type": "inventory",
     "attributes": {
-      "quantity": 50
+      "productId": 1,
+      "quantity": 150,
+      "createdAt": "2024-02-20T12:00:00Z",
+      "updatedAt": "2024-02-20T12:30:00Z"
     },
     "relationships": {
       "product": {
         "data": {
-          "type": "product",
-          "id": "1"
+          "id": "1",
+          "type": "product"
         }
       }
     }
   },
-  "links": {
-    "self": "/inventory/1"
-  }
+  "included": [
+    {
+      "id": "1",
+      "type": "product",
+      "attributes": {
+        "name": "Producto de prueba",
+        "description": "Descripción del producto",
+        "price": 99.99,
+        "createdAt": "2024-02-20T12:00:00Z",
+        "updatedAt": "2024-02-20T12:00:00Z"
+      }
+    }
+  ]
 }
 ```
 
-## Pruebas
+## Documentación API
+
+La documentación completa de la API está disponible en:
+```
+http://localhost:3001/api
+```
+
+## Tests
+
+### Ejecutar Tests
 
 ```bash
-# Ejecutar pruebas unitarias
+# Tests unitarios
 npm run test
 
-# Ejecutar pruebas e2e
-npm run test:e2e
-
-# Ver cobertura de pruebas
+# Tests con cobertura
 npm run test:cov
+
+# Tests e2e
+npm run test:e2e
 ```
 
-## Arquitectura
+### Cobertura de Tests
 
-### Estructura del proyecto
+El servicio mantiene una cobertura de tests superior al 60%, incluyendo:
+- Tests unitarios para servicios y controladores
+- Tests de integración para endpoints
+- Tests de casos de error
+- Tests de validación de datos
 
-```
-src/
-├── inventory/
-│   ├── dto/              # Objetos de transferencia de datos
-│   ├── entities/         # Entidades y modelos
-│   ├── inventory.controller.ts   # Controlador REST
-│   ├── inventory.service.ts      # Lógica de negocio
-│   └── inventory.module.ts       # Módulo NestJS
-├── app.module.ts         # Módulo principal
-└── main.ts              # Punto de entrada
-```
+## Resolución de Problemas
 
-### Flujo de comunicación
+### Problemas Comunes
 
-1. El cliente hace una petición al servicio de inventario
-2. El servicio de inventario consulta su base de datos
-3. Para información adicional, el servicio consulta al servicio de productos
-4. La respuesta se formatea según el estándar JSON API y se envía al cliente
+1. **Error de Conexión a Base de Datos**
+   - Verificar que PostgreSQL esté corriendo
+   - Comprobar credenciales en .env
+   - Asegurar que el puerto no esté en uso
 
-## Resolución de problemas
+2. **Error de Conexión al Servicio de Productos**
+   - Verificar que el servicio de productos esté corriendo
+   - Comprobar URL en .env
+   - Revisar logs para detalles específicos
 
-### Problemas de conexión con el servicio de productos
+3. **Errores de Validación**
+   - Asegurar que los datos enviados cumplan con el esquema
+   - Verificar tipos de datos correctos
+   - Revisar mensajes de error en la respuesta
 
-El servicio intenta conectar con múltiples URLs si la primera falla:
-- URL configurada (PRODUCTS_SERVICE_URL)
-- http://host.docker.internal:3000
-- http://localhost:3000
-- http://127.0.0.1:3000
-- http://product-service:3000
+### Logs
 
-Esto permite flexibilidad en diferentes entornos de despliegue, especialmente en Docker.
+Los logs están disponibles en:
+- Docker: `docker-compose logs -f inventory-service`
+- Local: `npm run start:dev`
 
 ## Contribución
 
-1. Haz fork del proyecto
-2. Crea una rama para tu funcionalidad (`git checkout -b feature/amazing-feature`)
-3. Haz commit de tus cambios (`git commit -m 'Add some amazing feature'`)
-4. Haz push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
+1. Fork el repositorio
+2. Crear una rama para tu feature (`git checkout -b feature/amazing-feature`)
+3. Commit tus cambios (`git commit -m 'Add some amazing feature'`)
+4. Push a la rama (`git push origin feature/amazing-feature`)
+5. Abrir un Pull Request
 
 ## Licencia
 
-Este proyecto está licenciado bajo la licencia MIT - ver el archivo LICENSE para más detalles.
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+
