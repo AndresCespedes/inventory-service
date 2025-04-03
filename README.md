@@ -1,22 +1,30 @@
-# Servicio de Inventario
+# Microservicio de Inventario
 
-Este servicio es parte de una arquitectura de microservicios y se encarga de gestionar el inventario de productos. Se comunica con el servicio de productos a través de una API REST siguiendo el estándar JSON API.
+Este proyecto implementa un microservicio para la gestión de inventario de productos. El servicio forma parte de una arquitectura distribuida que se comunica con el servicio de productos mediante peticiones HTTP siguiendo el estándar JSON API.
 
-## Características
+## Tabla de contenidos
 
-- Gestión de inventario de productos
-- Integración con servicio de productos
-- Validación de datos
-- Documentación con Swagger
-- Manejo de errores estandarizado
-- Logging detallado
-- Tests unitarios y de integración
-- Dockerización completa
-- Monitoreo de eventos de inventario
+- [Arquitectura](#arquitectura)
+- [Tecnologías utilizadas](#tecnologías-utilizadas)
+- [Requisitos previos](#requisitos-previos)
+- [Instalación y ejecución](#instalación-y-ejecución)
+- [Configuración](#configuración)
+- [Endpoints de la API](#endpoints-de-la-api)
+- [Comunicación entre servicios](#comunicación-entre-servicios)
+- [Decisiones técnicas](#decisiones-técnicas)
+- [Pruebas](#pruebas)
+- [Resolución de problemas](#resolución-de-problemas)
 
 ## Arquitectura
 
-### Diagrama de Conexión
+El microservicio de inventario es parte de una arquitectura de microservicios que gestiona el catálogo de productos y su inventario. Este servicio específicamente se encarga de:
+
+1. Mantener registro de la cantidad disponible de cada producto
+2. Comunicarse con el servicio de productos para obtener información detallada
+3. Proporcionar respuestas con formato JSON API estándar
+4. Emitir eventos cuando el inventario cambia
+
+### Diagrama de arquitectura
 
 ```mermaid
 graph TD
@@ -39,22 +47,41 @@ graph TD
     style DB fill:#dfd,stroke:#333,stroke-width:2px
 ```
 
-### Flujo de Comunicación
+### Flujo de comunicación
 
 1. El cliente hace una petición al servicio de inventario
 2. El servicio de inventario consulta su base de datos PostgreSQL
 3. Para información adicional del producto, el servicio consulta al servicio de productos
 4. La respuesta se formatea según el estándar JSON API y se envía al cliente
 
-## Requisitos
+## Tecnologías utilizadas
+
+- **Backend**:
+  - NestJS (Node.js)
+  - TypeScript
+  - TypeORM
+  - PostgreSQL
+  - JSON API
+
+- **Documentación**:
+  - Swagger/OpenAPI
+
+- **Contenedores**:
+  - Docker
+  - Docker Compose
+
+- **Pruebas**:
+  - Jest
+
+## Requisitos previos
 
 - Node.js 18+
 - PostgreSQL 15+
-- Docker y Docker Compose (opcional)
+- Docker y Docker Compose (para despliegue containerizado)
 
-## Instalación
+## Instalación y ejecución
 
-### Usando Docker (Recomendado)
+### Usando Docker (recomendado)
 
 1. Clonar el repositorio:
 ```bash
@@ -73,8 +100,9 @@ docker-compose up -d
 ```
 
 El servicio estará disponible en `http://localhost:3001`
+La documentación Swagger estará disponible en `http://localhost:3001/api`
 
-### Instalación Local
+### Instalación local (desarrollo)
 
 1. Instalar dependencias:
 ```bash
@@ -93,7 +121,7 @@ npm run start:dev
 
 ## Configuración
 
-### Variables de Entorno
+### Variables de entorno
 
 ```env
 # Puerto del servicio
@@ -116,23 +144,9 @@ API_KEY=your-api-key
 TEST_MODE=false
 ```
 
-### Base de Datos
+## Endpoints de la API
 
-El servicio utiliza PostgreSQL con la siguiente estructura:
-
-```sql
-CREATE TABLE inventory (
-    id SERIAL PRIMARY KEY,
-    product_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## API Endpoints
-
-### Obtener Inventario por ID de Producto
+### Obtener inventario por ID de producto
 
 ```http
 GET /inventory/{productId}
@@ -176,7 +190,7 @@ Respuesta exitosa:
 }
 ```
 
-### Actualizar Inventario
+### Actualizar inventario
 
 ```http
 PATCH /inventory/{productId}
@@ -230,54 +244,89 @@ Respuesta exitosa:
 }
 ```
 
-## Documentación API
+## Comunicación entre servicios
 
-La documentación completa de la API está disponible en:
-```
-http://localhost:3001/api
-```
+La comunicación entre el microservicio de Inventario y el de Productos se realiza mediante peticiones HTTP con las siguientes características:
 
-## Tests
+- **Autenticación**: Mediante API Keys (encabezado `Authorization: Bearer {api-key}`)
+- **Formato**: JSON API para solicitudes y respuestas
+- **Manejo de errores**: Sistema de reintentos configurable para gestionar fallos de comunicación
+- **Eventos**: El microservicio de Inventario emite eventos cuando el inventario cambia
 
-### Ejecutar Tests
+### Ejemplo de flujo:
+
+1. Cliente solicita información de inventario para un producto específico
+2. Microservicio de Inventario:
+   - Busca el inventario del producto en su base de datos
+   - Realiza una petición HTTP al microservicio de Productos para obtener los detalles del producto
+   - Combina la información y retorna una respuesta con formato JSON API
+
+## Decisiones técnicas
+
+### Base de datos
+
+Se eligió PostgreSQL por las siguientes razones:
+- Soporte transaccional: Necesario para operaciones atómicas en el inventario
+- Buen rendimiento: Adecuado para las consultas de inventario
+- Integración eficiente con TypeORM y NestJS
+
+### Estándar JSON API
+
+Se implementó este estándar para:
+- Proporcionar una experiencia coherente entre los microservicios
+- Facilitar las relaciones entre recursos (inventario y productos)
+- Estandarizar el formato de errores
+- Mejorar la documentación y comprensión de la API
+
+### Logs estructurados
+
+Se implementó un sistema de logs estructurados para:
+- Facilitar el diagnóstico de problemas
+- Mejorar la observabilidad
+- Registrar información importante de manera consistente
+
+### Manejo de excepciones
+
+Se implementaron filtros de excepciones para:
+- Estandarizar las respuestas de error
+- Seguir el formato JSON API
+- Registrar adecuadamente los errores
+
+## Pruebas
+
+### Ejecución de pruebas
 
 ```bash
-# Tests unitarios
+# Pruebas unitarias
 npm run test
 
-# Tests con cobertura
+# Pruebas con cobertura
 npm run test:cov
 ```
 
-### Cobertura de Tests
+### Estrategia de pruebas
 
 El servicio mantiene una cobertura de tests superior al 60%, incluyendo:
 - Tests unitarios para servicios y controladores
 - Tests de integración para endpoints
-- Tests de casos de error
-- Tests de validación de datos
+- Tests para verificar el formato JSON API de las respuestas
+- Tests de casos de error y validación de datos
 
-## Resolución de Problemas
+## Resolución de problemas
 
-### Problemas Comunes
+### Problemas comunes
 
-1. **Error de Conexión a Base de Datos**
+1. **Error de conexión a base de datos**
    - Verificar que PostgreSQL esté corriendo
    - Comprobar credenciales en .env
    - Asegurar que el puerto no esté en uso
 
-2. **Error de Conexión al Servicio de Productos**
+2. **Error de conexión al servicio de productos**
    - Verificar que el servicio de productos esté corriendo
    - Comprobar URL en .env
    - Revisar logs para detalles específicos
 
-3. **Errores de Validación**
+3. **Errores de validación**
    - Asegurar que los datos enviados cumplan con el esquema
    - Verificar tipos de datos correctos
    - Revisar mensajes de error en la respuesta
-
-### Logs
-
-Los logs están disponibles en:
-- Docker: `docker-compose logs -f inventory-service`
-- Local: `npm run start:dev`
