@@ -93,10 +93,7 @@ git clone <repository-url>
 cd inventory-service
 ```
 
-2. Crear archivo .env:
-```bash
-cp .env.example .env
-```
+2. Configura tus variables de entorno en un archivo .env
 
 3. Iniciar los servicios:
 ```bash
@@ -113,10 +110,7 @@ La documentación Swagger estará disponible en `http://localhost:3001/api`
 npm install
 ```
 
-2. Configurar variables de entorno:
-```bash
-cp .env.example .env
-```
+2. Configura tus variables de entorno en un archivo .env
 
 3. Iniciar el servicio:
 ```bash
