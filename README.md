@@ -1,73 +1,208 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Servicio de Inventario - Microservicio
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este proyecto implementa un microservicio de gestión de inventario que se comunica con un servicio de productos, siguiendo el estándar JSON API para respuestas.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Características
 
-## Description
+- 🚀 Microservicio NestJS para gestión de inventario
+- 🔄 Comunicación con servicio de productos mediante HTTP
+- 📊 Formato JSON API para respuestas
+- 🐳 Configuración con Docker y Docker Compose
+- 📝 Documentación API con Swagger
+- ✅ Pruebas automatizadas con Jest
+- 🧩 Validación de datos con class-validator
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Requisitos
 
-## Installation
+- Node.js (>= 14.x)
+- npm o yarn
+- Docker y Docker Compose (para entorno containerizado)
+- Servicio de productos funcionando en paralelo
+
+## Instalación
+
+### Instalación local
 
 ```bash
-$ npm install
+# Instalar dependencias
+npm install
+
+# Iniciar en modo desarrollo
+npm run start:dev
+
+# Compilar para producción
+npm run build
+
+# Iniciar en modo producción
+npm run start:prod
 ```
 
-## Running the app
+### Instalación con Docker
 
 ```bash
-# development
-$ npm run start
+# Construir imagen
+docker build -t inventory-service .
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Ejecutar contenedor
+docker run -p 3001:3001 -e PRODUCTS_SERVICE_URL=http://product-service:3000 inventory-service
 ```
 
-## Test
+### Usando Docker Compose
 
 ```bash
-# unit tests
-$ npm run test
+# Iniciar ambos servicios (productos e inventario)
+docker-compose up -d
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Detener servicios
+docker-compose down
 ```
 
-## Support
+## Configuración
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+El servicio utiliza las siguientes variables de entorno:
 
-## Stay in touch
+| Variable | Descripción | Valor por defecto |
+|----------|-------------|-------------------|
+| PRODUCTS_SERVICE_URL | URL base del servicio de productos | http://localhost:3000 |
+| API_KEY | Clave API para autenticación | my-secret-api-key |
+| PORT | Puerto en el que se ejecuta el servicio | 3001 |
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Documentación API
 
-## License
+La documentación interactiva de la API está disponible en `/api/docs` una vez iniciado el servicio.
 
-Nest is [MIT licensed](LICENSE).
+### Endpoints principales
+
+#### GET /inventory/:productId
+
+Obtiene el inventario de un producto específico y su información relacionada.
+
+**Respuesta exitosa (200 OK)**
+```json
+{
+  "data": {
+    "type": "inventory",
+    "id": "1",
+    "attributes": {
+      "quantity": 100
+    },
+    "relationships": {
+      "product": {
+        "data": {
+          "type": "product",
+          "id": "1"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "product",
+      "id": "1",
+      "attributes": {
+        "name": "Producto de ejemplo",
+        "price": 99.99
+      }
+    }
+  ],
+  "links": {
+    "self": "/inventory/1"
+  }
+}
+```
+
+#### PATCH /inventory/:productId
+
+Actualiza la cantidad disponible de un producto.
+
+**Cuerpo de la solicitud**
+```json
+{
+  "quantity": 50
+}
+```
+
+**Respuesta exitosa (200 OK)**
+```json
+{
+  "data": {
+    "type": "inventory",
+    "id": "1",
+    "attributes": {
+      "quantity": 50
+    },
+    "relationships": {
+      "product": {
+        "data": {
+          "type": "product",
+          "id": "1"
+        }
+      }
+    }
+  },
+  "links": {
+    "self": "/inventory/1"
+  }
+}
+```
+
+## Pruebas
+
+```bash
+# Ejecutar pruebas unitarias
+npm run test
+
+# Ejecutar pruebas e2e
+npm run test:e2e
+
+# Ver cobertura de pruebas
+npm run test:cov
+```
+
+## Arquitectura
+
+### Estructura del proyecto
+
+```
+src/
+├── inventory/
+│   ├── dto/              # Objetos de transferencia de datos
+│   ├── entities/         # Entidades y modelos
+│   ├── inventory.controller.ts   # Controlador REST
+│   ├── inventory.service.ts      # Lógica de negocio
+│   └── inventory.module.ts       # Módulo NestJS
+├── app.module.ts         # Módulo principal
+└── main.ts              # Punto de entrada
+```
+
+### Flujo de comunicación
+
+1. El cliente hace una petición al servicio de inventario
+2. El servicio de inventario consulta su base de datos
+3. Para información adicional, el servicio consulta al servicio de productos
+4. La respuesta se formatea según el estándar JSON API y se envía al cliente
+
+## Resolución de problemas
+
+### Problemas de conexión con el servicio de productos
+
+El servicio intenta conectar con múltiples URLs si la primera falla:
+- URL configurada (PRODUCTS_SERVICE_URL)
+- http://host.docker.internal:3000
+- http://localhost:3000
+- http://127.0.0.1:3000
+- http://product-service:3000
+
+Esto permite flexibilidad en diferentes entornos de despliegue, especialmente en Docker.
+
+## Contribución
+
+1. Haz fork del proyecto
+2. Crea una rama para tu funcionalidad (`git checkout -b feature/amazing-feature`)
+3. Haz commit de tus cambios (`git commit -m 'Add some amazing feature'`)
+4. Haz push a la rama (`git push origin feature/amazing-feature`)
+5. Abre un Pull Request
+
+## Licencia
+
+Este proyecto está licenciado bajo la licencia MIT - ver el archivo LICENSE para más detalles.
