@@ -1,3 +1,7 @@
+# Puedes descargar la colección de postman para realizar las pruebas
+
+[PruebaTecnica.postman_collection.json](https://github.com/user-attachments/files/19595628/PruebaTecnica.postman_collection.json)
+
 # Microservicio de Inventario
 
 Este proyecto implementa un microservicio para la gestión de inventario de productos. El servicio forma parte de una arquitectura distribuida que se comunica con el servicio de productos mediante peticiones HTTP siguiendo el estándar JSON API.
