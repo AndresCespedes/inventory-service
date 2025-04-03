@@ -1,0 +1,43 @@
+services:
+  postgres_db:
+    image: postgres:15
+    container_name: postgres_db_inventory
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: products
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
+    networks:
+      - app-network
+  inventory-service:
+    build:
+      context: .
+      dockerfile: Dockerfile 
+    container_name: inventory-service
+    ports:
+      - '3001:3001'
+    depends_on:
+      - postgres_db
+    environment:
+      DB_HOST: postgres_db_inventory
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 12345
+      DB_NAME: products
+      API_KEY: my-secret-api-key
+      PRODUCTS_SERVICE_URL: http://host.docker.internal:3000
+    networks:
+      - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata:
