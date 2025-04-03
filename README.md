@@ -14,6 +14,38 @@ Este servicio es parte de una arquitectura de microservicios y se encarga de ges
 - Dockerización completa
 - Monitoreo de eventos de inventario
 
+## Arquitectura
+
+### Diagrama de Conexión
+
+```mermaid
+graph TD
+    Client[Cliente] -->|HTTP| Inventory[Servicio de Inventario]
+    Inventory -->|HTTP| Products[Servicio de Productos]
+    Inventory -->|PostgreSQL| DB[(Base de Datos)]
+    
+    subgraph "Servicio de Inventario"
+        Inventory
+        DB
+    end
+    
+    subgraph "Servicio de Productos"
+        Products
+    end
+    
+    style Client fill:#f9f,stroke:#333,stroke-width:2px
+    style Inventory fill:#bbf,stroke:#333,stroke-width:2px
+    style Products fill:#bbf,stroke:#333,stroke-width:2px
+    style DB fill:#dfd,stroke:#333,stroke-width:2px
+```
+
+### Flujo de Comunicación
+
+1. El cliente hace una petición al servicio de inventario
+2. El servicio de inventario consulta su base de datos PostgreSQL
+3. Para información adicional del producto, el servicio consulta al servicio de productos
+4. La respuesta se formatea según el estándar JSON API y se envía al cliente
+
 ## Requisitos
 
 - Node.js 18+
@@ -215,9 +247,6 @@ npm run test
 
 # Tests con cobertura
 npm run test:cov
-
-# Tests e2e
-npm run test:e2e
 ```
 
 ### Cobertura de Tests
@@ -252,16 +281,3 @@ El servicio mantiene una cobertura de tests superior al 60%, incluyendo:
 Los logs están disponibles en:
 - Docker: `docker-compose logs -f inventory-service`
 - Local: `npm run start:dev`
-
-## Contribución
-
-1. Fork el repositorio
-2. Crear una rama para tu feature (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add some amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abrir un Pull Request
-
-## Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
-
